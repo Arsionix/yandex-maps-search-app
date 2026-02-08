@@ -1,4 +1,5 @@
 import requests
+import math
 
 API_KEY = '8013b162-6b42-4997-9691-77b7074026e0'
 
@@ -6,7 +7,7 @@ API_KEY = '8013b162-6b42-4997-9691-77b7074026e0'
 def geocode(address):
     # Собираем запрос для геокодера.
     geocoder_request = f"http://geocode-maps.yandex.ru/1.x/?apikey={API_KEY}" \
-                       f"&geocode={address}&format=json"
+        f"&geocode={address}&format=json"
 
     # Выполняем запрос.
     response = requests.get(geocoder_request)
@@ -75,7 +76,7 @@ def get_ll_span(address):
 def get_nearest_object(point, kind):
     ll = "{0},{1}".format(point[0], point[1])
     geocoder_request = f"http://geocode-maps.yandex.ru/1.x/?apikey={API_KEY}" \
-                       f"&geocode={ll}&kind={kind}&format=json"
+        f"&geocode={ll}&kind={kind}&format=json"
 
     # Выполняем запрос к геокодеру, анализируем ответ.
     response = requests.get(geocoder_request)
@@ -83,7 +84,7 @@ def get_nearest_object(point, kind):
         raise RuntimeError(
             f"""Ошибка выполнения запроса:
             {geocoder_request}
-            Http статус: {response.status_code,} ({response.reason})""")
+            Http статус: {response.status_code, }({response.reason})""")
 
     # Преобразуем ответ в json-объект
     json_response = response.json()
@@ -91,3 +92,11 @@ def get_nearest_object(point, kind):
     # Получаем первый топоним из ответа геокодера.
     features = json_response["response"]["GeoObjectCollection"]["featureMember"]
     return features[0]["GeoObject"]["name"] if features else None
+
+
+def calculate_distance(lon1, lat1, lon2, lat2):
+    R = 6371000
+    lat1, lat2, lon1, lon2 = map(math.radians, [lat1, lat2, lon1, lon2])
+    dlat, dlon = lat2 - lat1, lon2 - lon1
+    a = math.sin(dlat/2)**2 + math.cos(lat1)*math.cos(lat2)*math.sin(dlon/2)**2
+    return 2 * R * math.asin(math.sqrt(a))
